@@ -8,17 +8,56 @@ namespace ToySeller3000
     
     public partial class Form1 : Form
     {
+        
         private DataTable table;
+        private DataTable table2;//This table is Add Product table
         private MongoClient dbClient;
         private IMongoDatabase database;
         private IMongoCollection<BsonDocument> logins;
         private IMongoCollection<DbStructureInventory> inventory_database;
         private IMongoCollection<DbStructureProducts> products_database;
+        private Form2 form2;
         public Form1()
         {
             InitializeComponent();
+            form2 = new Form2(this);
+            inv_table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         }
+        private void userNameBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (checkEmpty("login"))
+                {
+                    login_button.PerformClick();
+                }
+            }
+        }
+        private void passwordBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (checkEmpty("login"))
+                {
+                    login_button.PerformClick();
+                }
+            }
+        }
+        //This just makes sure boxes aren't left empty when you submit info for login and adding to inventory
+        private bool checkEmpty(string currEvent)
+        {
+            if(currEvent == "login")
+            {
+                if(passwordBox.Text == "" || userNameBox.Text == "")
+                {
+                    MessageBox.Show("Don't leave username or password empty");
+                    return false;
+                }
+            }
 
+            //not empty
+            return true;
+        }
         private void button1_Click(object sender, EventArgs e)
         {
             string username = userNameBox.Text;
@@ -36,9 +75,12 @@ namespace ToySeller3000
                 {
                     //login found enable everything else
                     foundUser++;
+                    addProductButton.Enabled = true;
                     addBox.Enabled = true;
                     addInv.Enabled = true;
                     removeInv.Enabled = true;
+                    inventoryButton.Enabled = true;
+                    productButton.Enabled = true;  
                     //Fill table with inventory
                     Fill_Inventory();
                     break;
@@ -91,6 +133,21 @@ namespace ToySeller3000
                 table.Rows.Add(inv_id, inv_name, inv_price);
             }
         }
+        private void Fill_History()
+        {
+
+        }
+        private void createHistoryTable()
+        {
+            table = new DataTable();
+            inv_table.DataSource = table;
+            table.Columns.Add("Id");
+            table.Columns.Add("Name");
+            table.Columns.Add("Price");
+            table.Columns.Add("Quantity");
+            table.Columns.Add("Total");
+            table.Columns.Add("Date");
+        }
         private void createProductTable()
         {
             table = new DataTable();
@@ -132,7 +189,7 @@ namespace ToySeller3000
                         ProductId = product.ProductId,
                         ProductName = product.ProductName,
                         ProductPrice = product.ProductPrice,
-                        Quantity = 1
+                        Quantity = Int32.Parse(addNum.Text)
                     };
                     inventory_database.InsertOne(newInvItem);
                 } 
@@ -172,6 +229,11 @@ namespace ToySeller3000
             //Reset Inventory
             Fill_Inventory();
         }
+        
+        private void history_button_Click(object sender, EventArgs e)
+        {
+            Fill_History();
+        }
 
         private void inventoryButton_Click(object sender, EventArgs e)
         {
@@ -182,6 +244,57 @@ namespace ToySeller3000
         {
             Fill_Product();
         }
+        private void createForm2Table()
+        {
+            table2 = new DataTable();
+            form2.prodTable = table2;
+            table2.Columns.Add("Id");
+            table2.Columns.Add("Name");
+            table2.Columns.Add("Price");
+            table2.Columns.Add("Quantity");
+
+
+            var filter = new BsonDocument();
+            var prod_result = products_database.Find(filter).ToList();
+            foreach (var prod_var in prod_result)
+            {
+                int inv_id = prod_var.ProductId;
+                string inv_name = prod_var.ProductName;
+                int inv_price = prod_var.ProductPrice;
+                table2.Rows.Add(inv_id, inv_name, inv_price);
+            }
+        }
+        private void addProductButton_Click(object sender, EventArgs e)
+        {        
+            createForm2Table();
+            //open form 2
+            form2.ShowDialog();
+        }
+        //This function will get id, name and price from form 2
+        //and add a new product to the database of products
+        public void addNewProduct(int id, string name, int price)
+        {
+            var filter_prod = Builders<DbStructureProducts>.Filter.Eq("ProductId", id);
+            var product = products_database.Find(filter_prod).FirstOrDefault();
+            //Find matching id from Products
+            if (product == null)
+            {
+                var newProduct = new DbStructureProducts
+                {
+                    ProductId = id,
+                    ProductName = name,
+                    ProductPrice = price,
+                };
+                products_database.InsertOne(newProduct);
+            }
+            else
+            {
+                MessageBox.Show("Id matches with existing product");
+            }
+                createForm2Table();    
+        }
+
+        
     }
     public class DbStructureInventory
     {

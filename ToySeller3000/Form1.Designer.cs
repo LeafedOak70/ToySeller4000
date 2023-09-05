@@ -40,6 +40,8 @@
             this.tableLabel = new System.Windows.Forms.Label();
             this.inventoryButton = new System.Windows.Forms.Button();
             this.productButton = new System.Windows.Forms.Button();
+            this.addProductButton = new System.Windows.Forms.Button();
+            this.history_button = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.inv_table)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.addNum)).BeginInit();
             this.SuspendLayout();
@@ -110,7 +112,7 @@
             // inv_table
             // 
             this.inv_table.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.inv_table.Location = new System.Drawing.Point(12, 48);
+            this.inv_table.Location = new System.Drawing.Point(12, 47);
             this.inv_table.Name = "inv_table";
             this.inv_table.RowHeadersWidth = 51;
             this.inv_table.RowTemplate.Height = 29;
@@ -135,6 +137,7 @@
             // 
             // inventoryButton
             // 
+            this.inventoryButton.Enabled = false;
             this.inventoryButton.Location = new System.Drawing.Point(12, 497);
             this.inventoryButton.Name = "inventoryButton";
             this.inventoryButton.Size = new System.Drawing.Size(94, 29);
@@ -145,6 +148,7 @@
             // 
             // productButton
             // 
+            this.productButton.Enabled = false;
             this.productButton.Location = new System.Drawing.Point(112, 497);
             this.productButton.Name = "productButton";
             this.productButton.Size = new System.Drawing.Size(94, 29);
@@ -153,11 +157,35 @@
             this.productButton.UseVisualStyleBackColor = true;
             this.productButton.Click += new System.EventHandler(this.productButton_Click);
             // 
+            // addProductButton
+            // 
+            this.addProductButton.Enabled = false;
+            this.addProductButton.Location = new System.Drawing.Point(190, 428);
+            this.addProductButton.Name = "addProductButton";
+            this.addProductButton.Size = new System.Drawing.Size(133, 29);
+            this.addProductButton.TabIndex = 14;
+            this.addProductButton.Text = "New Product";
+            this.addProductButton.UseVisualStyleBackColor = true;
+            this.addProductButton.Click += new System.EventHandler(this.addProductButton_Click);
+            // 
+            // history_button
+            // 
+            this.history_button.Enabled = false;
+            this.history_button.Location = new System.Drawing.Point(212, 497);
+            this.history_button.Name = "history_button";
+            this.history_button.Size = new System.Drawing.Size(94, 29);
+            this.history_button.TabIndex = 15;
+            this.history_button.Text = "History";
+            this.history_button.UseVisualStyleBackColor = true;
+            this.history_button.Click += new System.EventHandler(this.history_button_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1163, 570);
+            this.Controls.Add(this.history_button);
+            this.Controls.Add(this.addProductButton);
             this.Controls.Add(this.productButton);
             this.Controls.Add(this.inventoryButton);
             this.Controls.Add(this.tableLabel);
@@ -193,5 +221,7 @@
         private Label tableLabel;
         private Button inventoryButton;
         private Button productButton;
+        private Button addProductButton;
+        private Button history_button;
     }
 }

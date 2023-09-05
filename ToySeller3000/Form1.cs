@@ -210,7 +210,7 @@ namespace ToySeller3000
             if(inv_item != null)
             {
                 //If exists within inventory remove quantity by 1 if it goes to 0 completely remove from table
-                int currentQuantity = inv_item.Quantity - 1;
+                int currentQuantity = inv_item.Quantity - Int32.Parse(addBox.Text);
                 if(currentQuantity > 0)
                 {
                     var update = Builders<DbStructureInventory>.Update.Set("Quantity", currentQuantity);
@@ -324,5 +324,33 @@ namespace ToySeller3000
         [BsonElement("quantity")]
         public int Quantity { get; set; }
         
+    }
+
+
+    public class DbStructureProfit
+    {
+        [BsonId]
+        public ObjectId _id { get; set; }
+
+        [BsonElement("id")]
+        public int ProductId { get; set; }
+
+        [BsonElement("name")]
+        public string ProductName { get; set; }
+
+        [BsonElement("total_stock")]
+        public int total_stock { get; set; }
+
+        [BsonElement("price")]
+        public int ProductPrice { get; set; }
+
+        [BsonElement("total_sold")]
+
+        public int total_sold { get; set; }
+
+        [BsonElement("date")]
+
+        public DateTime DateTime { get; set; }
+
     }
 }

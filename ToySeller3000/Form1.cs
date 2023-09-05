@@ -210,7 +210,7 @@ namespace ToySeller3000
             if(inv_item != null)
             {
                 //If exists within inventory remove quantity by 1 if it goes to 0 completely remove from table
-                int currentQuantity = inv_item.Quantity - Int32.Parse(addBox.Text);
+                int currentQuantity = inv_item.Quantity - Int32.Parse(addNum.Text);
                 if(currentQuantity > 0)
                 {
                     var update = Builders<DbStructureInventory>.Update.Set("Quantity", currentQuantity);

@@ -13,7 +13,7 @@ namespace ToySeller3000
         private DataTable table2;//This table is Add Product table
         private MongoClient dbClient;
         private IMongoDatabase database;
-        private IMongoCollection<BsonDocument> logins;
+        private IMongoCollection<DbStructureLogins> logins;
         private IMongoCollection<DbStructureInventory> inventory_database;
         private IMongoCollection<DbStructureProducts> products_database;
         private Form2 form2;
@@ -54,52 +54,53 @@ namespace ToySeller3000
                     return false;
                 }
             }
+            if(currEvent == "addInv")
+            {
+                if(addBox.Text == "")
+                {
+                    MessageBox.Show("Don't leave things empty");
+                    return false;
+                }
+            }
 
             //not empty
             return true;
         }
+        //login button
         private void button1_Click(object sender, EventArgs e)
         {
             string username = userNameBox.Text;
             string password = passwordBox.Text;
 
             ConnectToDatabase();
-            
-            var filter = new BsonDocument();
-            var login_result = logins.Find(filter).ToList();
-            var foundUser = 0;
+            var filter = Builders<DbStructureLogins>.Filter.Eq("Username", username);
+            var login_result = logins.Find(filter).FirstOrDefault();
             //Sift through the login table to find matching credentials
-            foreach (var document in login_result)
+            if(login_result != null)
             {
-                if (document.GetValue("username").AsString == username && document.GetValue("password").AsString == password)
+                if (login_result.Username == username && login_result.Password == password)
                 {
                     //login found enable everything else
-                    foundUser++;
                     addProductButton.Enabled = true;
                     addBox.Enabled = true;
                     addInv.Enabled = true;
                     removeInv.Enabled = true;
                     inventoryButton.Enabled = true;
-                    productButton.Enabled = true;  
+                    productButton.Enabled = true;
                     //Fill table with inventory
                     Fill_Inventory();
-                    break;
                 }
             }
-            //if it's still 0 by the end, it was never found
-            if(foundUser == 0)
+            else
             {
                 MessageBox.Show("Login either not found or there was an error");
             }
-            
-     
-
         }
         private void ConnectToDatabase()
         {
             dbClient = new MongoClient("mongodb://localhost:27017");
             database = dbClient.GetDatabase("ToysRUs");
-            logins = database.GetCollection<BsonDocument>("login_credentials");
+            logins = database.GetCollection<DbStructureLogins>("login_credentials");
             inventory_database = database.GetCollection<DbStructureInventory>("inventory");
             products_database = database.GetCollection<DbStructureProducts>("products");
         }
@@ -167,11 +168,16 @@ namespace ToySeller3000
         }
         private void addInv_Click(object sender, EventArgs e)
         {
+            if (checkEmpty("addInv") == false)
+            {
+                return;
+            }
             var filter_prod = Builders<DbStructureProducts>.Filter.Eq("ProductId", addBox.Text);
             var filter_inv = Builders<DbStructureInventory>.Filter.Eq("ProductId", addBox.Text);
             var product = products_database.Find(filter_prod).FirstOrDefault();
+            
             //Find matching id from Products
-            if(product != null)
+            if (product != null)
             {
                 //Check if it is already in the inventory
                 var product_inv = inventory_database.Find(filter_inv).FirstOrDefault();
@@ -204,7 +210,10 @@ namespace ToySeller3000
 
         private void removeInv_Click(object sender, EventArgs e)
         {
-            
+            if (checkEmpty("addInv") == false)
+            {
+                return;
+            }
             var filter_inv = Builders<DbStructureInventory>.Filter.Eq("ProductId", addBox.Text);
             var inv_item = inventory_database.Find(filter_inv).FirstOrDefault();
             if(inv_item != null)
@@ -309,6 +318,18 @@ namespace ToySeller3000
         public int Quantity { get; set; }
         [BsonElement("product_id")]
         public int ProductId { get; set; }
+    }
+
+    public class DbStructureLogins
+    {
+        [BsonId]
+        public ObjectId _id { get; set; }
+        [BsonElement("userid")]
+        public int UserId { get; set; }
+        [BsonElement("username")]
+        public string Username { get; set; }
+        [BsonElement("password")]
+        public string Password { get; set; }
     }
     public class DbStructureProducts
     {

@@ -31,6 +31,11 @@ namespace ToySeller3000
 
         private void submitProduct_Click(object sender, EventArgs e)
         {
+            if(newIdBox.Text == "" || newNameBox.Text == "" || newPriceBox.Text == "")
+            {
+                MessageBox.Show("Something is empty bro");
+                return;
+            }
             form1.addNewProduct(Int32.Parse(newIdBox.Text), newNameBox.Text, Int32.Parse(newPriceBox.Text));
         }
     }

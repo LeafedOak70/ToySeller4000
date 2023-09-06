@@ -62,6 +62,7 @@
             this.userNameBox.Name = "userNameBox";
             this.userNameBox.Size = new System.Drawing.Size(125, 27);
             this.userNameBox.TabIndex = 2;
+            this.userNameBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.passwordBox_KeyDown);
             // 
             // passwordBox
             // 
@@ -70,6 +71,7 @@
             this.passwordBox.PasswordChar = '*';
             this.passwordBox.Size = new System.Drawing.Size(125, 27);
             this.passwordBox.TabIndex = 3;
+            this.passwordBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.passwordBox_KeyDown);
             // 
             // addBox
             // 
@@ -116,7 +118,7 @@
             this.inv_table.Name = "inv_table";
             this.inv_table.RowHeadersWidth = 51;
             this.inv_table.RowTemplate.Height = 29;
-            this.inv_table.Size = new System.Drawing.Size(649, 261);
+            this.inv_table.Size = new System.Drawing.Size(1026, 261);
             this.inv_table.TabIndex = 8;
             // 
             // addNum

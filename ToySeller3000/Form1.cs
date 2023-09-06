@@ -16,6 +16,7 @@ namespace ToySeller3000
         private IMongoCollection<DbStructureLogins> logins;
         private IMongoCollection<DbStructureInventory> inventory_database;
         private IMongoCollection<DbStructureProducts> products_database;
+        private IMongoCollection<DbStructureProfit> history_database;
         private Form2 form2;
         public Form1()
         {
@@ -23,16 +24,7 @@ namespace ToySeller3000
             form2 = new Form2(this);
             inv_table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         }
-        private void userNameBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                if (checkEmpty("login"))
-                {
-                    login_button.PerformClick();
-                }
-            }
-        }
+        
         private void passwordBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -87,6 +79,7 @@ namespace ToySeller3000
                     removeInv.Enabled = true;
                     inventoryButton.Enabled = true;
                     productButton.Enabled = true;
+                    history_button.Enabled = true;
                     //Fill table with inventory
                     Fill_Inventory();
                 }
@@ -103,6 +96,7 @@ namespace ToySeller3000
             logins = database.GetCollection<DbStructureLogins>("login_credentials");
             inventory_database = database.GetCollection<DbStructureInventory>("inventory");
             products_database = database.GetCollection<DbStructureProducts>("products");
+            history_database = database.GetCollection<DbStructureProfit>("transaction_history");
         }
         //This will either fill the inventory for the first time or reset it when changed are made
         private void Fill_Inventory()
@@ -136,6 +130,22 @@ namespace ToySeller3000
         }
         private void Fill_History()
         {
+            tableLabel.Text = "Transactions";
+            createHistoryTable();
+            var filter = new BsonDocument();
+            var history_result = history_database.Find(filter).ToList();
+            foreach(var hist_var in history_result)
+            {
+                int id = hist_var.ProductId;
+                string name = hist_var.ProductName;
+                int price = hist_var.ProductPrice;
+                int total_sold = hist_var.total_sold;
+                int total_price = hist_var.total_price;
+                DateTime date = hist_var.soldDate;
+                bool sold = hist_var.sellBool;
+                table.Rows.Add(id, name, price, total_sold, total_price, date, sold);
+            }
+
 
         }
         private void createHistoryTable()
@@ -145,9 +155,10 @@ namespace ToySeller3000
             table.Columns.Add("Id");
             table.Columns.Add("Name");
             table.Columns.Add("Price");
-            table.Columns.Add("Quantity");
-            table.Columns.Add("Total");
+            table.Columns.Add("Total Sold");
+            table.Columns.Add("Total Price");
             table.Columns.Add("Date");
+            table.Columns.Add("Sold");
         }
         private void createProductTable()
         {
@@ -165,6 +176,21 @@ namespace ToySeller3000
             table.Columns.Add("Name");
             table.Columns.Add("Price");
             table.Columns.Add("Quantity");
+        }
+        private void addHistory(DbStructureProducts item, int total_sold, bool soldBool)
+        {
+            DateTime date = DateTime.Now;
+            var hist_item = new DbStructureProfit
+            {
+                ProductId = item.ProductId,
+                ProductName = item.ProductName,
+                ProductPrice = item.ProductPrice,
+                total_sold = total_sold,
+                total_price = total_sold * item.ProductPrice,
+                soldDate = date,
+                sellBool = soldBool
+            };
+            history_database.InsertOne(hist_item);
         }
         private void addInv_Click(object sender, EventArgs e)
         {
@@ -187,6 +213,8 @@ namespace ToySeller3000
                     int currentQuantity = product_inv.Quantity + Int32.Parse(addNum.Text);
                     var update = Builders<DbStructureInventory>.Update.Set("Quantity", currentQuantity);
                     inventory_database.UpdateOne(filter_inv, update);
+                    //record in history
+                    addHistory(product, Int32.Parse(addNum.Text), false);
                 }
                 else
                 {
@@ -198,6 +226,8 @@ namespace ToySeller3000
                         Quantity = Int32.Parse(addNum.Text)
                     };
                     inventory_database.InsertOne(newInvItem);
+                    //record to history
+                    addHistory(newInvItem, Int32.Parse(addNum.Text), false);
                 } 
             }
             else
@@ -218,16 +248,18 @@ namespace ToySeller3000
             var inv_item = inventory_database.Find(filter_inv).FirstOrDefault();
             if(inv_item != null)
             {
-                //If exists within inventory remove quantity by 1 if it goes to 0 completely remove from table
+                //If exists within inventory remove quantity if it goes to 0 completely remove from table
                 int currentQuantity = inv_item.Quantity - Int32.Parse(addNum.Text);
                 if(currentQuantity > 0)
                 {
                     var update = Builders<DbStructureInventory>.Update.Set("Quantity", currentQuantity);
                     inventory_database.UpdateOne(filter_inv, update);
+                    addHistory(inv_item, Int32.Parse(addNum.Text), true);
                 }
                 else
                 {
-                    inventory_database.DeleteOne(filter_inv); 
+                    inventory_database.DeleteOne(filter_inv);
+                    addHistory(inv_item, inv_item.Quantity, true);
                 }
 
             }
@@ -305,19 +337,11 @@ namespace ToySeller3000
 
         
     }
-    public class DbStructureInventory
+    public class DbStructureInventory : DbStructureProducts
     {
-        [BsonId]
-        public ObjectId _id { get; set; }
-
-        [BsonElement("product_name")]
-        public string ProductName { get; set; }
-        [BsonElement("product_price")]
-        public int ProductPrice { get; set; }
         [BsonElement("quantity")]
         public int Quantity { get; set; }
-        [BsonElement("product_id")]
-        public int ProductId { get; set; }
+ 
     }
 
     public class DbStructureLogins
@@ -342,36 +366,28 @@ namespace ToySeller3000
         public string ProductName { get; set; }
         [BsonElement("product_price")]
         public int ProductPrice { get; set; }
-        [BsonElement("quantity")]
-        public int Quantity { get; set; }
         
     }
 
 
-    public class DbStructureProfit
+    public class DbStructureProfit : DbStructureProducts
     {
-        [BsonId]
-        public ObjectId _id { get; set; }
-
-        [BsonElement("id")]
-        public int ProductId { get; set; }
-
-        [BsonElement("name")]
-        public string ProductName { get; set; }
-
-        [BsonElement("total_stock")]
-        public int total_stock { get; set; }
-
-        [BsonElement("price")]
-        public int ProductPrice { get; set; }
+       
 
         [BsonElement("total_sold")]
 
         public int total_sold { get; set; }
 
+        [BsonElement("total_price")]
+        public int total_price { get; set; }
+
         [BsonElement("date")]
 
-        public DateTime DateTime { get; set; }
+        public DateTime soldDate { get; set; }
+
+        [BsonElement("sellBool")]
+
+        public bool sellBool { get; set; }
 
     }
 }
